@@ -2,6 +2,7 @@ const express = require('express')
 const Sse = require('json-sse')
 const bodyParser = require('body-parser')
 const cors = require('cors')
+const Message = require('./messages/model')
 
 const app = express()
 
@@ -27,7 +28,7 @@ function onStream(request, response){
 
 app.get('/stream', onStream)
 
-function onMessage(request, response) {
+function onMessage(request, response, next) {
   const { message } = request.body
 
   messages.push(message);
@@ -41,7 +42,17 @@ function onMessage(request, response) {
   stream.send(json)
 
   //send Response
-  return response.status(201).send(message)
+
+  console.log('what is message?', message)
+
+  Message
+    .create({ message })
+    .then(res => {
+      response.status(201).send(res)
+    })
+    .catch(err => next(err))
+
+  // return response.status(201).send(message)
 }
 
 app.post('/message', onMessage)
